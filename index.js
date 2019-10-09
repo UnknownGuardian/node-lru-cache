@@ -212,6 +212,10 @@ class LRUCache {
     return get(this, key, true)
   }
 
+  getHit(key) {
+    return getHit(this, key, true);
+  }
+
   peek (key) {
     return get(this, key, false)
   }
@@ -272,6 +276,25 @@ const get = (self, key, doUse) => {
       }
     }
     return hit.value
+  }
+}
+
+const getHit = (self, key, doUse) => {
+  const node = self[CACHE].get(key)
+  if (node) {
+    const hit = node.value
+    if (isStale(self, hit)) {
+      del(self, node)
+      if (!self[ALLOW_STALE])
+        return undefined
+    } else {
+      if (doUse) {
+        if (self[UPDATE_AGE_ON_GET])
+          node.value.now = Date.now()
+        self[LRU_LIST].unshiftNode(node)
+      }
+    }
+    return hit;
   }
 }
 

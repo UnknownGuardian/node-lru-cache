@@ -219,6 +219,9 @@ class LRUCache {
   peek (key) {
     return get(this, key, false)
   }
+  peekHit (key) {
+    return getHit(this, key, false)
+  }
 
   pop () {
     const node = this[LRU_LIST].tail

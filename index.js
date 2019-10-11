@@ -146,6 +146,16 @@ class LRUCache {
       }).toArray().filter(h => h)
   }
 
+  dumpNow () {
+    return this[LRU_LIST].map(hit =>
+      isStale(this, hit) ? false : {
+        k: hit.key,
+        v: hit.value,
+        e: hit.now + (hit.maxAge || 0),
+        n: hit.now
+      }).toArray().filter(h => h)
+  }
+
   dumpLru () {
     return this[LRU_LIST]
   }

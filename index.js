@@ -3,6 +3,7 @@
 // A linked list to keep track of recently-used-ness
 const Yallist = require('yallist')
 
+const NOW = Symbol('now')
 const MAX = Symbol('max')
 const LENGTH = Symbol('length')
 const LENGTH_CALCULATOR = Symbol('lengthCalculator')
@@ -36,6 +37,8 @@ class LRUCache {
       throw new TypeError('max must be a non-negative number')
     // Kind of weird to have a default max of Infinity, but oh well.
     const max = this[MAX] = options.max || Infinity
+
+    this[NOW] = options.now || Date.now;
 
     const lc = options.length || naiveLength
     this[LENGTH_CALCULATOR] = (typeof lc !== 'function') ? naiveLength : lc
@@ -166,7 +169,7 @@ class LRUCache {
     if (maxAge && typeof maxAge !== 'number')
       throw new TypeError('maxAge must be a number')
 
-    const now = maxAge ? Date.now() : 0
+    const now = maxAge ? this[NOW]() : 0
     const len = this[LENGTH_CALCULATOR](value, key)
 
     if (this[CACHE].has(key)) {
@@ -250,7 +253,7 @@ class LRUCache {
     // reset the cache
     this.reset()
 
-    const now = Date.now()
+    const now = this[NOW]()
     // A previous serialized cache has the most recent items first
     for (let l = arr.length - 1; l >= 0; l--) {
       const hit = arr[l]
@@ -284,7 +287,7 @@ const get = (self, key, doUse) => {
     } else {
       if (doUse) {
         if (self[UPDATE_AGE_ON_GET])
-          node.value.now = Date.now()
+          node.value.now = self[NOW]()
         self[LRU_LIST].unshiftNode(node)
       }
     }
@@ -303,7 +306,7 @@ const getHit = (self, key, doUse) => {
     } else {
       if (doUse) {
         if (self[UPDATE_AGE_ON_GET])
-          node.value.now = Date.now()
+          node.value.now = self[NOW]()
         self[LRU_LIST].unshiftNode(node)
       }
     }
@@ -315,7 +318,7 @@ const isStale = (self, hit) => {
   if (!hit || (!hit.maxAge && !self[MAX_AGE]))
     return false
 
-  const diff = Date.now() - hit.now
+  const diff = self[NOW]() - hit.now
   return hit.maxAge ? diff > hit.maxAge
     : self[MAX_AGE] && (diff > self[MAX_AGE])
 }
